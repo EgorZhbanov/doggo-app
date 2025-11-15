@@ -7,10 +7,23 @@ pipeline {
                 url: 'https://github.com/EgorZhbanov/doggo-app'
             }
         }
+        stage('Check Docker Access') {
+            steps {
+                sh '''
+                    echo "=== Checking Docker permissions ==="
+                    docker ps || echo "Docker not accessible"
+                    groups
+                    whoami
+                '''
+            }
+        }
         stage('Deploy Services') {
             steps {
                 dir('jenkins_practise-main/_devops/docker-compose') {
-                    sh 'docker compose up --build -d'
+                    sh '''
+                        echo "=== Building and starting services with sudo ==="
+                        sudo docker compose up --build -d
+                    '''
                 }
             }
         }
@@ -19,8 +32,8 @@ pipeline {
                 sh '''
                     sleep 30
                     echo "=== Checking running containers ==="
-                    docker ps
-                    echo "=== Testing application health ==="
+                    sudo docker ps
+                    echo "=== Testing application ==="
                     curl -f http://localhost:8080/dog/history || echo "Application is starting..."
                 '''
             }
