@@ -1,47 +1,51 @@
 pipeline {
     agent any
+    
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main',
-                url: 'https://github.com/EgorZhbanov/doggo-app'
+                echo 'Cloning repository...'
+                // Этот stage автоматически клонирует репозиторий из настроек pipeline
+                // Дополнительное клонирование не нужно
             }
         }
-        stage('Check Docker Access') {
+        
+        stage('Build and Deploy') {
             steps {
-                sh '''
-                    echo "=== Checking Docker permissions ==="
-                    sudo docker ps || echo "Docker not accessible"
-                    groups
-                    whoami
-                '''
+                echo 'Building and deploying with Docker Compose...'
+                sh 'docker compose up --build -d'
             }
         }
-        stage('Deploy Services') {
+        
+        stage('Health Check') {
             steps {
-                dir('jenkins_practise-main/_devops/docker-compose') {
-                    sh '''
-                        echo "=== Building and starting services with sudo ==="
-                        sudo docker compose up --build -d
-                    '''
+                echo 'Performing health check...'
+                script {
+                    timeout(time: 2, unit: 'MINUTES') {
+                        waitUntil {
+                            try {
+                                sh 'curl -f http://localhost:8080/dog/history'
+                                return true
+                            } catch (Exception e) {
+                                return false
+                            }
+                        }
+                    }
                 }
             }
         }
-        stage('Verify Deployment') {
-            steps {
-                sh '''
-                    sleep 30
-                    echo "=== Checking running containers ==="
-                    sudo docker ps
-                    echo "=== Testing application ==="
-                    curl -f http://localhost:8080/dog/history || echo "Application is starting..."
-                '''
-            }
-        }
     }
+    
     post {
         always {
             cleanWs()
+        }
+        success {
+            echo 'Deployment completed successfully!'
+            echo 'Application is available at: http://localhost:8080'
+        }
+        failure {
+            echo 'Deployment failed!'
         }
     }
 }
