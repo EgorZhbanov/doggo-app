@@ -9,8 +9,13 @@ pipeline {
         }
         stage('Deploy Services') {
             steps {
-                dir('_devops/docker-compose') {
-                    sh 'docker compose up --build -d'
+                dir('.') {  // ← ИЗМЕНИТЕ ПУТЬ НА КОРЕНЬ ПРОЕКТА
+                    sh '''
+                        pwd
+                        ls -la
+                        ls -la _devops/docker-compose/
+                        docker compose -f _devops/docker-compose/docker-compose.yml up --build -d
+                    '''
                 }
             }
         }
