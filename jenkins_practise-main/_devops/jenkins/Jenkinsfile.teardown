@@ -1,0 +1,17 @@
+pipeline {
+    agent any
+    stages {
+        stage('Teardown Services') {
+            steps {
+                dir('_devops/docker-compose') {
+                    sh 'docker compose down'
+                }
+            }
+        }
+    }
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
