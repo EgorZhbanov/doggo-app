@@ -9,14 +9,20 @@ pipeline {
         }
         stage('Deploy Services') {
             steps {
-                dir('.') {  // ← ИЗМЕНИТЕ ПУТЬ НА КОРЕНЬ ПРОЕКТА
-                    sh '''
-                        pwd
-                        ls -la
-                        ls -la _devops/docker-compose/
-                        docker compose -f _devops/docker-compose/docker-compose.yml up --build -d
-                    '''
+                dir('jenkins_practise-main/_devops/docker-compose') {
+                    sh 'docker compose up --build -d'
                 }
+            }
+        }
+        stage('Verify Deployment') {
+            steps {
+                sh '''
+                    sleep 30
+                    echo "=== Checking running containers ==="
+                    docker ps
+                    echo "=== Testing application health ==="
+                    curl -f http://localhost:8080/dog/history || echo "Application is starting..."
+                '''
             }
         }
     }
