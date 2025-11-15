@@ -1,0 +1,46 @@
+pipeline {
+    agent any
+    
+    parameters {
+        string(name: 'GIT_REPO', defaultValue: 'https://github.com/EgorZhbanov/doggo-app.git', description: 'Git repository URL')
+        string(name: 'BRANCH', defaultValue: 'main', description: 'Branch')
+    }
+    
+    stages {
+        stage('Clone Repository') {
+            steps {
+                echo 'Cloning repository...'
+                git branch: "${params.BRANCH}", url: "${params.GIT_REPO}"
+            }
+        }
+        
+        stage('Stop Services') {
+            steps {
+                echo 'Stopping services...'
+                sh 'docker compose down'
+            }
+        }
+        
+        stage('Cleanup') {
+            steps {
+                echo 'Cleaning up Docker resources...'
+                sh '''
+                    docker system prune -f || true
+                    docker volume prune -f || true
+                '''
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo 'Cleanup completed successfully!'
+        }
+        failure {
+            echo 'Cleanup completed with warnings'
+        }
+    }
+}
