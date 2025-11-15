@@ -11,7 +11,7 @@ pipeline {
             steps {
                 sh '''
                     echo "=== Checking Docker permissions ==="
-                    docker ps || echo "Docker not accessible"
+                    sudo docker ps || echo "Docker not accessible"
                     groups
                     whoami
                 '''
